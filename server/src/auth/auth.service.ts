@@ -11,7 +11,7 @@ export class AuthService {
 
   async signup(
     { email, name, password, phone }: SignupParams,
-    // userType: UserType,
+    userType: UserType,
   ): Promise<string> {
     const userExist = await this.prisma.user.findUnique({
       where: {
@@ -28,7 +28,7 @@ export class AuthService {
         email,
         phone,
         password: hashedPassword,
-        user_type: UserType.BUYER,
+        user_type: userType,
       },
     });
 
@@ -49,6 +49,11 @@ export class AuthService {
     if (!isValidPassport) throw new HttpException('Invalid Credentials', 400);
 
     return this.generateJWT(user.name, user.id);
+  }
+
+  async generateProductKey(email: string, userType: UserType): Promise<string> {
+    const string = `${email}-${userType}-${process.env.PRODUCT_KEY}`;
+    return bcrypt.hash(string, 10);
   }
 
   private generateJWT(name: string, id: number) {
